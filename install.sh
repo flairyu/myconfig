@@ -22,8 +22,8 @@ echo "2. link config files"
 cd $HOME
 rm .zshrc
 rm .vimrc
-ln -s .myconfig/.zshrc
-ln -s .myconfig/.vimrc
+ln -s .myconfig/zshrc .zshrc
+ln -s .myconfig/vimrc .vimrc
 vim +PluginInstall +qall
 
 echo "Done."
