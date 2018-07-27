@@ -15,8 +15,9 @@ fi
 
 echo "1. install softwares:"
 $apt install $packs
+git clone https://github.com/flairyu/myconfig.git $HOME/.myconfig
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+git clone https://github.com/VundleVim/Vundle.vim.git $HOME/.vim/bundle/Vundle.vim
 
 echo "2. link config files"
 cd $HOME
