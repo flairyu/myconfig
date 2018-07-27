@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 echo "Restore configs..."
 
-$packbase="zsh git vim curl wget axel"
+packbase="zsh git vim curl wget axel tmux"
 if [ -n "$(command -v yum)" ]; then
-    apt="yum -y"
+    apt="sudo yum -y"
     packs="$packbase the_silver_searcher"
 elif [ -n "$(command -v apt)" ]; then
-    apt="apt -y"
+    apt="sudo apt -y"
     packs="$packbase silversearcher-ag"
 else
     echo "not support system"
@@ -21,8 +21,8 @@ git clone https://github.com/VundleVim/Vundle.vim.git $HOME/.vim/bundle/Vundle.v
 
 echo "2. link config files"
 cd $HOME
-rm .zshrc
-rm .vimrc
+rm -f .zshrc
+rm -f .vimrc
 ln -s .myconfig/zshrc .zshrc
 ln -s .myconfig/vimrc .vimrc
 vim +PluginInstall +qall
