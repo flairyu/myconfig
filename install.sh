@@ -27,4 +27,7 @@ ln -s .myconfig/zshrc .zshrc
 ln -s .myconfig/vimrc .vimrc
 vim +PluginInstall +qall
 
+echo "3. generate home/bin"
+cp -R .myconfig/bin $HOME
+
 echo "Done."

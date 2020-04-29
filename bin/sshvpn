@@ -1,0 +1,2 @@
+#!/bin/bash
+ssh -D 7890 -q -C -N -f yxb@yxb.space
