@@ -106,3 +106,11 @@ export PATH=$NDK_ROOT:$PATH
 export ANDROID_SDK_ROOT=/Users/yxb/Library/Android/sdk
 export PATH=$ANDROID_SDK_ROOT:$PATH
 export PATH=$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/platform-tools:$PATH
+
+if grep -q "microsoft" /proc/version &>/dev/null; then
+    # WSL2
+    export DISPLAY="$(ip route|awk '/^default/{print $3}'):0.0"
+    export PULSE_SERVER="${PULSE_SERVER:-tcp:$(ip route|awk '/^default/{print $3}')}"
+    # export LIBGL_ALWAYS_INDIRECT=1
+    # export XDG_SESSION_TYPE=x11
+fi
