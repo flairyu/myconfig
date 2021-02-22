@@ -15,6 +15,7 @@ fi
 
 echo "1. install softwares:"
 $apt install $packs
+git config --global credential.helper store
 git clone https://github.com/flairyu/myconfig.git $HOME/.myconfig
 # sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 sh -c $HOME/.myconfig/install_zsh.sh
