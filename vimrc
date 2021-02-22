@@ -65,6 +65,8 @@ nmap <C-j> :tabp<cr>
 vnoremap // y/<C-R>"<CR>
 " replace selected thing by Ctrl-r
 vnoremap <C-r> "hy:%s/<C-r>h//gc<left><left><left>
+" bind K to grep word under cursor
+nnoremap K :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
 
 " This is an alternative that also works in block mode, but the deleted
 " text is lost and it only works for putting the current register.
@@ -132,6 +134,7 @@ if executable('ag')
     let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
 endif
 "Options for ctrlp END
+
 
 "Using mouse to switch window
 set mouse=a
