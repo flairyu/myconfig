@@ -111,3 +111,11 @@ export PATH=$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/platform-tools:$PATH
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+if grep -q "microsoft" /proc/version &>/dev/null; then
+    # WSL2
+    export DISPLAY="$(ip route|awk '/^default/{print $3}'):0.0"
+    export PULSE_SERVER="${PULSE_SERVER:-tcp:$(ip route|awk '/^default/{print $3}')}"
+    # export LIBGL_ALWAYS_INDIRECT=1
+    # export XDG_SESSION_TYPE=x11
+fi
