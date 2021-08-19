@@ -119,3 +119,10 @@ if grep -q "microsoft" /proc/version &>/dev/null; then
     # export LIBGL_ALWAYS_INDIRECT=1
     # export XDG_SESSION_TYPE=x11
 fi
+
+# for npm manager 'n'
+export N_PREFIX=$HOME/apps/nodejs
+export PATH=$N_PREFIX/bin:$PATH
+
+# for dotnet tools
+export PATH=$PATH:$HOME/.dotnet/tools/
