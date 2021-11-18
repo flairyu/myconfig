@@ -1,5 +1,5 @@
 #!/bin/bash
-apt-get install -y \
+sudo apt-get install -y \
     mariadb-server \
     mariadb-client \
     php \

@@ -1,5 +1,5 @@
 #!/bin/bash
-apt-get update && apt-get install -y \
+sudo apt-get install -y \
     curl \
     vim \
     procps \
