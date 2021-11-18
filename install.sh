@@ -33,7 +33,7 @@ cp -R .myconfig/bin $HOME
 
 echo "4. install zsh themes"
 sh -c $HOME/.myconfig/install_p10k.sh
-# sh -c $HOME/.myconfig/install_zsh.sh
+# sh -c $HOME/.myconfig/install_omzsh.sh
 
 echo "5. change shell, you need relogin later"
 chsh -s /usr/bin/zsh
