@@ -61,7 +61,7 @@ function n_grep() {
 # Setup and state
 #
 
-VERSION="7.3.0"
+VERSION="v8.0.0"
 
 N_PREFIX="${N_PREFIX-/usr/local}"
 N_PREFIX=${N_PREFIX%/}
@@ -115,9 +115,9 @@ if [ -n "$HTTP_USER" ];then
   if [ -z "$HTTP_PASSWORD" ]; then
     abort "Must specify HTTP_PASSWORD when supplying HTTP_USER"
   fi
-  CURL_OPTIONS+=("-u $HTTP_USER:$HTTP_PASSWORD")
-  WGET_OPTIONS+=("--http-password=$HTTP_PASSWORD"
-                "--http-user=$HTTP_USER")
+  CURL_OPTIONS+=( "-u $HTTP_USER:$HTTP_PASSWORD" )
+  WGET_OPTIONS+=( "--http-password=$HTTP_PASSWORD"
+                "--http-user=$HTTP_USER" )
 elif [ -n "$HTTP_PASSWORD" ]; then
   abort "Must specify HTTP_USER when supplying HTTP_PASSWORD"
 fi
@@ -128,7 +128,7 @@ g_active_node=
 # set by various lookups to allow mixed logging and return value from function, especially for engine and node
 g_target_node=
 
-ACTIVATE=true
+DOWNLOAD=false # set to opt-out of activate (install), and opt-in to download (run, exec)
 ARCH=
 SHOW_VERBOSE_LOG="true"
 
@@ -371,7 +371,6 @@ Commands:
   n <version>                    Install Node.js <version> (downloading if necessary)
   n install <version>            Install Node.js <version> (downloading if necessary)
   n run <version> [args ...]     Execute downloaded Node.js <version> with [args ...]
-  n run <version> [args ...]     Execute downloaded node <version> with [args ...]
   n which <version>              Output path for downloaded node <version>
   n exec <vers> <cmd> [args...]  Execute command with modified PATH, so downloaded node <version> and npm first
   n rm <version ...>             Remove the given downloaded version(s)
@@ -388,7 +387,7 @@ Options:
   -h, --help            Display help information
   -p, --preserve        Preserve npm and npx during install of Node.js
   -q, --quiet           Disable curl output. Disable log messages processing "auto" and "engine" labels.
-  -d, --download        Download only
+  -d, --download        Download if necessary, and don't make active
   -a, --arch            Override system architecture
   --all                 ls-remote displays all matches instead of last 20
   --insecure            Turn off certificate checking for https requests (may be needed from behind a proxy server)
@@ -689,14 +688,20 @@ activate() {
     # Copy just npm, skipping possible added global modules after download. Clean copy to avoid version change problems.
     clean_copy_folder "$dir/lib/node_modules/npm" "$N_PREFIX/lib/node_modules/npm"
   fi
+  # Takes same steps for corepack (experimental in node 16.9.0) as for npm, to avoid version problems.
+  if [[ -e "$dir/lib/node_modules/corepack" ]]; then
+    mkdir -p "$N_PREFIX/lib/node_modules"
+    clean_copy_folder "$dir/lib/node_modules/corepack" "$N_PREFIX/lib/node_modules/corepack"
+  fi
 
   # bin
   mkdir -p "$N_PREFIX/bin"
   # Remove old node to avoid potential problems with firewall getting confused on Darwin by overwrite.
   rm -f "$N_PREFIX/bin/node"
-  # Copy just node, in case user has installed global npm modules into cache.
+  # Copy bin items by hand, in case user has installed global npm modules into cache.
   cp -f "$dir/bin/node" "$N_PREFIX/bin"
   [[ -e "$dir/bin/node-waf" ]] && cp -f "$dir/bin/node-waf" "$N_PREFIX/bin" # v0.8.x
+  [[ -e "$dir/bin/corepack" ]] && cp -fR "$dir/bin/corepack" "$N_PREFIX/bin" # from 16.9.0
   if [[ -z "${N_PRESERVE_NPM}" ]]; then
     [[ -e "$dir/bin/npm" ]] && cp -fR "$dir/bin/npm" "$N_PREFIX/bin"
     [[ -e "$dir/bin/npx" ]] && cp -fR "$dir/bin/npx" "$N_PREFIX/bin"
@@ -765,7 +770,7 @@ install() {
 
   if test -d "$dir"; then
     if [[ ! -e "$dir/n.lock" ]] ; then
-      if "$ACTIVATE" ; then
+      if [[ "$DOWNLOAD" == "false" ]] ; then
         activate "${g_mirror_folder_name}/${version}"
       fi
       exit
@@ -793,7 +798,7 @@ install() {
 
   disable_pax_mprotect bin/node
 
-  if "$ACTIVATE" ; then
+  if [[ "$DOWNLOAD" == "false" ]]; then
     activate "${g_mirror_folder_name}/$version"
   fi
 }
@@ -894,6 +899,9 @@ function find_cached_version() {
 
   update_mirror_settings_for_version "$1"
   g_cached_version="${CACHE_DIR}/${g_mirror_folder_name}/${version}"
+  if [[ ! -d "${g_cached_version}" && "${DOWNLOAD}" == "true" ]]; then
+    (install "${version}")
+  fi
   [[ -d "${g_cached_version}" ]] || abort "'$1' (${version}) not in downloads cache"
 }
 
@@ -1063,7 +1071,8 @@ function get_package_engine_version() {
   local range
   range="$(node -e "package = require('${filepath}'); if (package && package.engines && package.engines.node) console.log(package.engines.node)")"
   verbose_log "read" "${range}"
-  if [[ -z "${range}" || "*" == "${range}" ]]; then
+  [[ -n "${range}" ]] || return 2
+  if [[ "*" == "${range}" ]]; then
     verbose_log "target" "current"
     g_target_node="current"
     return
@@ -1134,6 +1143,7 @@ function get_engine_version() {
     break
   done
   [[ -n "${parent}" ]] || abort "${error_message}"
+  [[ -n "${g_target_node}" ]] || abort "did not find supported version of node in 'engines' field of package.json"
 }
 
 #
@@ -1161,6 +1171,7 @@ function get_auto_version() {
   done
   # Fallback to package.json
   [[ -n "${parent}" ]] || get_engine_version "no file found for auto version (.n-node-version, .node-version, .nvmrc, or package.json)"
+  [[ -n "${g_target_node}" ]] || abort "file found for auto did not contain target version of node"
 }
 
 #
@@ -1327,9 +1338,11 @@ uninstall_installed() {
   delete_with_echo "${N_PREFIX}/bin/node"
   delete_with_echo "${N_PREFIX}/bin/npm"
   delete_with_echo "${N_PREFIX}/bin/npx"
+  delete_with_echo "${N_PREFIX}/bin/corepack"
   delete_with_echo "${N_PREFIX}/include/node"
   delete_with_echo "${N_PREFIX}/lib/dtrace/node.d"
   delete_with_echo "${N_PREFIX}/lib/node_modules/npm"
+  delete_with_echo "${N_PREFIX}/lib/node_modules/corepack"
   delete_with_echo "${N_PREFIX}/share/doc/node"
   delete_with_echo "${N_PREFIX}/share/man/man1/node.1"
   delete_with_echo "${N_PREFIX}/share/systemtap/tapset/node.stp"
@@ -1528,6 +1541,7 @@ function show_diagnostics() {
 # which feel pretty natural.
 
 unprocessed_args=()
+positional_arg="false"
 
 while [[ $# -ne 0 ]]; do
   case "$1" in
@@ -1535,7 +1549,7 @@ while [[ $# -ne 0 ]]; do
     -V|--version) display_n_version ;;
     -h|--help|help) display_help; exit ;;
     -q|--quiet) set_quiet ;;
-    -d|--download) ACTIVATE=false ;;
+    -d|--download) DOWNLOAD="true" ;;
     --insecure) set_insecure ;;
     -p|--preserve) N_PRESERVE_NPM="true" ;;
     --no-preserve) N_PRESERVE_NPM="" ;;
@@ -1545,9 +1559,17 @@ while [[ $# -ne 0 ]]; do
     --stable) display_remote_versions lts; exit ;; # [sic] old terminology
     --lts) display_remote_versions lts; exit ;;
     -a|--arch) shift; set_arch "$1";; # set arch and continue
-    exec) unprocessed_args=("$@"); break ;;
-    run|as|use) unprocessed_args=("$@"); break ;;
-    *) unprocessed_args+=( "$1" ) ;;
+    exec|run|as|use)
+      unprocessed_args+=( "$1" )
+      positional_arg="true"
+      ;;
+    *)
+      if [[ "${positional_arg}" == "true" ]]; then
+        unprocessed_args+=( "$@" )
+        break
+      fi
+      unprocessed_args+=( "$1" )
+      ;;
   esac
   shift
 done
