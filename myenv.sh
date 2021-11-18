@@ -26,7 +26,11 @@ export N_PREFIX=$HOME/apps/nodejs
 export PATH=$N_PREFIX/bin:$PATH
 
 # for dotnet tools
+export DOTNET_ROOT=/snap/dotnet-sdk/current
 export PATH=$PATH:$HOME/.dotnet/tools/
+
+# for snap
+export PATH=$PATH:/snap/bin
 
 alias ls='ls --color=auto'
 alias ll='ls -l'
