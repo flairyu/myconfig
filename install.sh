@@ -17,7 +17,7 @@ echo "1. install softwares:"
 $apt install $packs
 git config --global credential.helper store
 git clone https://github.com/flairyu/myconfig.git $HOME/.myconfig
-git clone https://github.com/VundleVim/Vundle.vim.git $HOME/.vim/bundle/Vundle.vim
+# git clone https://github.com/VundleVim/Vundle.vim.git $HOME/.vim/bundle/Vundle.vim
 
 echo "2. link config files"
 cd $HOME
