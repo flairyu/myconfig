@@ -1,8 +1,8 @@
 #!/bin/bash
 
 FROM=
-TO=icewolfsoft.cn:
-FILES="/data/www /data/mysql_bak /home/yxb/work"
+TO=example.com:
+FILES="/data/www /data/mysql_bak $HOME/work"
 SUDO_FILES="/var/lib/mysql /etc/nginx /etc/letsencrypt"
 RSYNC="rsync -a"
 
