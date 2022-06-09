@@ -1,5 +1,5 @@
 #! /bin/bash
-
+# ref: https://devopscube.com/create-self-signed-certificates-openssl/
 if [ "$#" -ne 1 ]
 then
   echo "Error: No domain name argument provided"
